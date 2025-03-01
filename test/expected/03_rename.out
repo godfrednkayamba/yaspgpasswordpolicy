@@ -30,6 +30,7 @@ SET yaspgpp.password_min_repeat TO DEFAULT;
 --length must be >=2
 --
 SET yaspgpp.username_min_length TO 2;
+DROP USER IF EXISTS b;
 ALTER USER aaa RENAME TO b;
 ERROR:  username length should match the configured yaspgpp.username_min_length (2)
 -- Check that renaiming a user without password also invoke the extension
