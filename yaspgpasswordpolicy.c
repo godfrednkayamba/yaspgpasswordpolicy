@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
  *
- * credcheck.c:
+ * yaspgpasswordpolicy.c:
  * 		This file has the general PostgreSQL credential checks.
  *
  * This program is open source, licensed under the PostgreSQL license.
@@ -67,10 +67,10 @@
 
 /* Magic number identifying the stats file format */
 static const uint32 PGPH_FILE_HEADER = 0x48504750;
-/* credcheck password history version, changes in which invalidate all entries */
+/* yaspgpp password history version, changes in which invalidate all entries */
 static const uint32 PGPH_VERSION = 100;
-#define PGPH_TRANCHE_NAME                "credcheck_history"
-#define PGAF_TRANCHE_NAME                "credcheck_auth_failure"
+#define PGPH_TRANCHE_NAME                "yaspgpp_history"
+#define PGAF_TRANCHE_NAME                "yaspgpp_auth_failure"
 
 static bool statement_has_password = false;
 static bool no_password_logging    = true;
@@ -199,7 +199,7 @@ static Size pgph_memsize(void);
 static void pg_password_history_internal(FunctionCallInfo fcinfo);
 static void fix_log(ErrorData *edata);
 static Size pgaf_memsize(void);
-static void credcheck_max_auth_failure(Port *port, int status);
+static void yaspgpp_max_auth_failure(Port *port, int status);
 static float get_auth_failure(const char *username, Oid userid, int status);
 static float save_auth_failure(Port *port, Oid userid);
 static void remove_auth_failure(const char *username, Oid userid);
@@ -374,7 +374,7 @@ username_check(const char *username, const char *password)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg(gettext_noop("username length should match the configured %s (%d)"), 
-				     "credcheck.username_min_length", username_min_length)));
+				     "yaspgpp.username_min_length", username_min_length)));
 		goto clean;
 	}
 
@@ -401,7 +401,7 @@ username_check(const char *username, const char *password)
 			ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 					errmsg(gettext_noop("username does not contain the configured %s characters: %s"),
-	 						"credcheck.username_contain", tmp_contains)));
+	 						"yaspgpp.username_contain", tmp_contains)));
 			goto clean;
 		}
 	}
@@ -414,7 +414,7 @@ username_check(const char *username, const char *password)
 			ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 					errmsg(gettext_noop("username contains the configured %s unauthorized characters: %s"),
-					       "credcheck.username_not_contain", tmp_not_contains)));
+					       "yaspgpp.username_not_contain", tmp_not_contains)));
 			goto clean;
 		}
 	}
@@ -428,7 +428,7 @@ username_check(const char *username, const char *password)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg("username does not contain the configured %s characters (%d)",
-				     "credcheck.username_min_upper", username_min_upper)));
+				     "yaspgpp.username_min_upper", username_min_upper)));
 		goto clean;
 	}
 
@@ -438,7 +438,7 @@ username_check(const char *username, const char *password)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg("username does not contain the configured %s characters (%d)",
-				     "credcheck.username_min_lower", username_min_lower)));
+				     "yaspgpp.username_min_lower", username_min_lower)));
 		goto clean;
 	}
 
@@ -448,7 +448,7 @@ username_check(const char *username, const char *password)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg("username does not contain the configured %s characters (%d)",
-				     "credcheck.username_min_digit", username_min_digit)));
+				     "yaspgpp.username_min_digit", username_min_digit)));
 		goto clean;
 	}
 
@@ -458,7 +458,7 @@ username_check(const char *username, const char *password)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg("username does not contain the configured %s characters (%d)",
-				     "credcheck.username_min_special", username_min_special)));
+				     "yaspgpp.username_min_special", username_min_special)));
 		goto clean;
 	}
 
@@ -470,7 +470,7 @@ username_check(const char *username, const char *password)
 			ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				   errmsg(gettext_noop("%s characters are repeated more than the "
-						"configured %s times (%d)"), "username", "credcheck.username_min_repeat", username_min_repeat)));
+						"configured %s times (%d)"), "username", "yaspgpp.username_min_repeat", username_min_repeat)));
 			goto clean;
 		}
 	}
@@ -595,7 +595,7 @@ static void password_check(const char *username, const char *password)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg(gettext_noop("password length should match the configured %s (%d)"),
-				     "credcheck.password_min_length", password_min_length)));
+				     "yaspgpp.password_min_length", password_min_length)));
 		goto clean;
 	}
 
@@ -619,7 +619,7 @@ static void password_check(const char *username, const char *password)
 			ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 					errmsg(gettext_noop("password does not contain the configured %s characters: %s"), 
-					       "credcheck.password_contain", tmp_contains)));
+					       "yaspgpp.password_contain", tmp_contains)));
 			goto clean;
 		}
 	}
@@ -632,7 +632,7 @@ static void password_check(const char *username, const char *password)
 			ereport(ERROR,
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 					errmsg(gettext_noop("password contains the configured %s unauthorized characters: %s"),
-					       "credcheck.password_not_contain", tmp_not_contains)));
+					       "yaspgpp.password_not_contain", tmp_not_contains)));
 			goto clean;
 		}
 	}
@@ -646,7 +646,7 @@ static void password_check(const char *username, const char *password)
 		ereport(ERROR,
 			(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg("password does not contain the configured %s characters (%d)",
-				     "credcheck.password_min_upper", password_min_upper)));
+				     "yaspgpp.password_min_upper", password_min_upper)));
 		goto clean;
 	}
 
@@ -656,7 +656,7 @@ static void password_check(const char *username, const char *password)
 		ereport(ERROR,
 			(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg("password does not contain the configured %s characters (%d)",
-				     "credcheck.password_min_lower", password_min_lower)));
+				     "yaspgpp.password_min_lower", password_min_lower)));
 		goto clean;
 	}
 
@@ -666,7 +666,7 @@ static void password_check(const char *username, const char *password)
 		ereport(ERROR,
 			(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg("password does not contain the configured %s characters (%d)",
-				     "credcheck.password_min_digit", password_min_digit)));
+				     "yaspgpp.password_min_digit", password_min_digit)));
 		goto clean;
 	}
 
@@ -676,7 +676,7 @@ static void password_check(const char *username, const char *password)
 		ereport(ERROR,
 			(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				errmsg("password does not contain the configured %s characters (%d)",
-				     "credcheck.password_min_special", password_min_special)));
+				     "yaspgpp.password_min_special", password_min_special)));
 		goto clean;
 	}
 
@@ -689,7 +689,7 @@ static void password_check(const char *username, const char *password)
 				(errcode(ERRCODE_INVALID_AUTHORIZATION_SPECIFICATION),
 				   errmsg("%s characters are repeated more than the "
 						"configured %s times (%d)", "password",
-						"credcheck.password_min_repeat", password_min_repeat)));
+						"yaspgpp.password_min_repeat", password_min_repeat)));
 			goto clean;
 		}
 	}
@@ -705,53 +705,53 @@ static void password_check(const char *username, const char *password)
 static void
 username_guc()
 {
-	DefineCustomIntVariable("credcheck.username_min_length",
+	DefineCustomIntVariable("yaspgpp.username_min_length",
 				gettext_noop("minimum username length"), NULL,
 				&username_min_length, 1, 1, INT_MAX, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.username_min_special",
+	DefineCustomIntVariable("yaspgpp.username_min_special",
 				gettext_noop("minimum username special characters"),
 				NULL, &username_min_special, 0, 0, INT_MAX,
 				PGC_SUSET, 0, NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.username_min_digit",
+	DefineCustomIntVariable("yaspgpp.username_min_digit",
 				gettext_noop("minimum username digits"), NULL,
 				&username_min_digit, 0, 0, INT_MAX, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.username_min_upper",
+	DefineCustomIntVariable("yaspgpp.username_min_upper",
 				gettext_noop("minimum username uppercase letters"),
 				NULL, &username_min_upper, 0, 0, INT_MAX, PGC_SUSET,
 				0, NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.username_min_lower",
+	DefineCustomIntVariable("yaspgpp.username_min_lower",
 				gettext_noop("minimum username lowercase letters"),
 				NULL, &username_min_lower, 0, 0, INT_MAX, PGC_SUSET,
 				0, NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.username_min_repeat",
+	DefineCustomIntVariable("yaspgpp.username_min_repeat",
 				gettext_noop("minimum username characters repeat"),
 				NULL, &username_min_repeat, 0, 0, INT_MAX,
 				PGC_SUSET, 0, NULL, NULL, NULL);
 
-	DefineCustomBoolVariable("credcheck.username_contain_password",
+	DefineCustomBoolVariable("yaspgpp.username_contain_password",
 				gettext_noop("username contains password"), NULL,
 				&username_contain_password, true, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomBoolVariable("credcheck.username_ignore_case",
+	DefineCustomBoolVariable("yaspgpp.username_ignore_case",
 				gettext_noop("ignore case while username checking"),
 				NULL, &username_ignore_case, false, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
 	DefineCustomStringVariable(
-				"credcheck.username_not_contain",
+				"yaspgpp.username_not_contain",
 				gettext_noop("username should not contain these characters"), NULL,
 				&username_not_contain, "", PGC_SUSET, 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable(
-				"credcheck.username_contain",
+				"yaspgpp.username_contain",
 				gettext_noop("password should contain these characters"), NULL,
 				&username_contain, "", PGC_SUSET, 0, NULL, NULL, NULL);
 }
@@ -759,75 +759,75 @@ username_guc()
 static void
 password_guc()
 {
-	DefineCustomIntVariable("credcheck.password_min_length",
+	DefineCustomIntVariable("yaspgpp.password_min_length",
 				gettext_noop("minimum password length"), NULL,
 				&password_min_length, 1, 1, INT_MAX, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.password_min_special",
+	DefineCustomIntVariable("yaspgpp.password_min_special",
 				gettext_noop("minimum special characters"), NULL,
 				&password_min_special, 0, 0, INT_MAX, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.password_min_digit",
+	DefineCustomIntVariable("yaspgpp.password_min_digit",
 				gettext_noop("minimum password digits"), NULL,
 				&password_min_digit, 0, 0, INT_MAX, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.password_min_upper",
+	DefineCustomIntVariable("yaspgpp.password_min_upper",
 				gettext_noop("minimum password uppercase letters"),
 				NULL, &password_min_upper, 0, 0, INT_MAX, PGC_SUSET,
 				0, NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.password_min_lower",
+	DefineCustomIntVariable("yaspgpp.password_min_lower",
 				gettext_noop("minimum password lowercase letters"),
 				NULL, &password_min_lower, 0, 0, INT_MAX, PGC_SUSET,
 				0, NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.password_min_repeat",
+	DefineCustomIntVariable("yaspgpp.password_min_repeat",
 				gettext_noop("minimum password characters repeat"),
 				NULL, &password_min_repeat, 0, 0, INT_MAX,
 				PGC_SUSET, 0, NULL, NULL, NULL);
 
-	DefineCustomBoolVariable("credcheck.password_contain_username",
+	DefineCustomBoolVariable("yaspgpp.password_contain_username",
 				gettext_noop("password contains username"), NULL,
 				&password_contain_username, true, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomBoolVariable("credcheck.password_ignore_case",
+	DefineCustomBoolVariable("yaspgpp.password_ignore_case",
 				gettext_noop("ignore case while password checking"),
 				NULL, &password_ignore_case, false, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
 	DefineCustomStringVariable(
-				"credcheck.password_not_contain",
+				"yaspgpp.password_not_contain",
 				gettext_noop("password should not contain these characters"), NULL,
 				&password_not_contain, "", PGC_SUSET, 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable(
-				"credcheck.password_contain",
+				"yaspgpp.password_contain",
 				gettext_noop("password should contain these characters"), NULL,
 				&password_contain, "", PGC_SUSET, 0, NULL, NULL, NULL);
 
 #if PG_VERSION_NUM >= 120000
-	DefineCustomIntVariable("credcheck.password_reuse_history",
+	DefineCustomIntVariable("yaspgpp.password_reuse_history",
 				gettext_noop("minimum number of password changes before permitting reuse"),
 				NULL, &password_reuse_history, 0, 0, 100,
 				PGC_SUSET, 0, NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.password_reuse_interval",
+	DefineCustomIntVariable("yaspgpp.password_reuse_interval",
 				gettext_noop("minimum number of days elapsed before permitting reuse"),
 				NULL, &password_reuse_interval, 0, 0, 730, /* max 2 years */
 				PGC_SUSET, 0, NULL, NULL, NULL);
 #endif
 
-	DefineCustomIntVariable("credcheck.password_valid_until",
+	DefineCustomIntVariable("yaspgpp.password_valid_until",
 				gettext_noop("force use of VALID UNTIL clause in CREATE ROLE statement"
 					" with a minimum number of days"),
 				NULL, &password_valid_until, 0, 0, INT_MAX,
 				PGC_SUSET, 0, NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.password_valid_max",
+	DefineCustomIntVariable("yaspgpp.password_valid_max",
 				gettext_noop("force use of VALID UNTIL clause in CREATE ROLE statement"
 					" with a maximum number of days"),
 				NULL, &password_valid_max, 0, 0, INT_MAX,
@@ -1288,44 +1288,44 @@ _PG_init(void)
 
 	if (process_shared_preload_libraries_in_progress)
 	{
-		DefineCustomIntVariable("credcheck.history_max_size",
+		DefineCustomIntVariable("yaspgpp.history_max_size",
 					gettext_noop("maximum of entries in the password history"), NULL,
 					&pgph_max, 65535, 1, (INT_MAX / 1024), PGC_POSTMASTER, 0,
 					NULL, NULL, NULL);
 
-		DefineCustomIntVariable("credcheck.auth_failure_cache_size",
+		DefineCustomIntVariable("yaspgpp.auth_failure_cache_size",
 					gettext_noop("maximum of entries in the auth failure cache"), NULL,
 					&pgaf_max, 1024, 1, (INT_MAX / 1024), PGC_POSTMASTER, 0,
 					NULL, NULL, NULL);
 	}
 
-	DefineCustomBoolVariable("credcheck.no_password_logging",
+	DefineCustomBoolVariable("yaspgpp.no_password_logging",
 				gettext_noop("prevent exposing the password in error messages logged"),
 				NULL, &no_password_logging, true, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.max_auth_failure",
+	DefineCustomIntVariable("yaspgpp.max_auth_failure",
 				gettext_noop("maximum number of authentication failure before"
 				" the user loggin account be invalidated"), NULL,
 				&fail_max, 0, 0, 64, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomBoolVariable("credcheck.reset_superuser",
+	DefineCustomBoolVariable("yaspgpp.reset_superuser",
 				gettext_noop("restore superuser acces when he have been banned."),
 				NULL, &reset_superuser, false, PGC_SIGHUP, 0,
 				NULL, NULL, NULL);
 
-	DefineCustomBoolVariable("credcheck.encrypted_password_allowed",
+	DefineCustomBoolVariable("yaspgpp.encrypted_password_allowed",
 				gettext_noop("allow encrypted password to be used or throw an error"),
 				NULL, &encrypted_password_allowed, false, PGC_SUSET, 0,
 				NULL, NULL, NULL);
 
 	DefineCustomStringVariable(
-				"credcheck.whitelist",
+				"yaspgpp.whitelist",
 				gettext_noop("comma separated list of username to exclude from password policy check"), NULL,
 				&username_whitelist, "", PGC_SUSET, 0, check_whitelist, NULL, NULL);
 
-	DefineCustomIntVariable("credcheck.auth_delay_ms",
+	DefineCustomIntVariable("yaspgpp.auth_delay_ms",
 				"Milliseconds to delay before reporting authentication failure",
 				NULL,
 				&auth_delay_milliseconds,
@@ -1338,12 +1338,12 @@ _PG_init(void)
 				NULL);
 
 	DefineCustomStringVariable(
-				"credcheck.whitelist_auth_failure",
+				"yaspgpp.whitelist_auth_failure",
 				gettext_noop("comma separated list of username to exclude from max authentication failure check"), NULL,
 				&max_auth_whitelist, "", PGC_SUSET, 0, check_whitelist, NULL, NULL);
 
 #if PG_VERSION_NUM < 150000
-	EmitWarningsOnPlaceholders("credcheck");
+	EmitWarningsOnPlaceholders("yaspgpp");
 
         /*
          * Request additional shared resources.  (These are no-ops if we're not in
@@ -1355,7 +1355,7 @@ _PG_init(void)
         RequestAddinShmemSpace(pgaf_memsize());
         RequestNamedLWLockTranche(PGAF_TRANCHE_NAME, 1);
 #else
-	MarkGUCPrefixReserved("credcheck");
+	MarkGUCPrefixReserved("yaspgpp");
 
 #endif
 
@@ -1375,7 +1375,7 @@ _PG_init(void)
 	emit_log_hook = fix_log;
 
 	prev_ClientAuthentication = ClientAuthentication_hook;
-	ClientAuthentication_hook = credcheck_max_auth_failure;
+	ClientAuthentication_hook = yaspgpp_max_auth_failure;
 }
 
 void
@@ -1599,7 +1599,7 @@ str_to_sha256(const char *password, const char *salt)
 	if (hmac_ctx == NULL)
 	{
 		pfree(result);
-		elog(ERROR, gettext_noop("credcheck could not initialize checksum context"));
+		elog(ERROR, gettext_noop("yaspgpp could not initialize checksum context"));
 	}
 
 	if (pg_hmac_init(hmac_ctx, (uint8 *) password, password_len) < 0 ||
@@ -1608,7 +1608,7 @@ str_to_sha256(const char *password, const char *salt)
 	{
 		pfree(result);
 		pg_hmac_free(hmac_ctx);
-		elog(ERROR, gettext_noop("credcheck could not initialize checksum"));
+		elog(ERROR, gettext_noop("yaspgpp could not initialize checksum"));
 	}
 	hex_encode((char *) checksumbuf, sizeof checksumbuf, result);
 	result[PG_SHA256_DIGEST_STRING_LENGTH - 1] = '\0';
@@ -1839,7 +1839,7 @@ pgph_entry_alloc(pgphHashKey *key, TimestampTz password_date)
 		ereport(LOG,
 				(errcode(ERRCODE_OUT_OF_MEMORY),
 				 errmsg("can not allocate enough memory for new entry in password history cache."),
-				 errhint("You shoul increase credcheck.history_max_size.")));
+				 errhint("You shoul increase yaspgpp.history_max_size.")));
 		return NULL;
 	}
 
@@ -1864,7 +1864,7 @@ pgaf_entry_alloc(pgafHashKey *key, float failure_count)
 		ereport(LOG,
 				(errcode(ERRCODE_OUT_OF_MEMORY),
 				 errmsg("can not allocate enough memory for new entry in auth failure cache."),
-				 errhint("You shoul increase credcheck.history_max_size.")));
+				 errhint("You shoul increase yaspgpp.history_max_size.")));
 		return NULL;
 	}
 
@@ -2078,7 +2078,7 @@ pg_password_history_internal(FunctionCallInfo fcinfo)
 	if (!pgph || !pgph_hash)
 		ereport(ERROR,
 				(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
-				 errmsg("credcheck must be loaded via shared_preload_libraries to use password history")));
+				 errmsg("yaspgpp must be loaded via shared_preload_libraries to use password history")));
 
 	/* check to see if caller supports us returning a tuplestore */
 	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))
@@ -2206,7 +2206,7 @@ fix_log(ErrorData *edata)
 }
 
 static void
-credcheck_max_auth_failure(Port *port, int status)
+yaspgpp_max_auth_failure(Port *port, int status)
 {
 
 	/* Inject a short delay if authentication failed. */
@@ -2239,7 +2239,7 @@ credcheck_max_auth_failure(Port *port, int status)
 			{
 				/*
 				 * if superuser have been banned, restore the access if requested
-				 * through credcheck.reset_superuser and a configuration reload
+				 * through yaspgpp.reset_superuser and a configuration reload
 				 */
 				if (reset_superuser && userOid == 10)
 					remove_auth_failure(port->user_name, userOid);
@@ -2445,7 +2445,7 @@ pg_banned_role_internal(FunctionCallInfo fcinfo)
 	if (!pgaf || !pgaf_hash)
 		ereport(ERROR,
 				(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
-				 errmsg("credcheck must be loaded via shared_preload_libraries to use auth failure feature")));
+				 errmsg("yaspgpp must be loaded via shared_preload_libraries to use auth failure feature")));
 
 	/* check to see if caller supports us returning a tuplestore */
 	if (rsinfo == NULL || !IsA(rsinfo, ReturnSetInfo))

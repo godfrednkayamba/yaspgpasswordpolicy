@@ -1,4 +1,4 @@
-EXTENSION = credcheck
+EXTENSION = yaspgpasswordpolicy
 EXTVERSION = $(shell grep default_version $(EXTENSION).control | \
 	       sed -e "s/default_version[[:space:]]*=[[:space:]]*'\([^']*\)'/\1/")
 
@@ -9,13 +9,13 @@ EXTVERSION = $(shell grep default_version $(EXTENSION).control | \
 
 PG_CPPFLAGS += -Wno-ignored-attributes
 
-MODULE_big = credcheck
-OBJS = credcheck.o $(WIN32RES)
-PGFILEDESC = "credcheck - postgresql credential checker"
+MODULE_big = yaspgpasswordpolicy
+OBJS = yaspgpasswordpolicy.o $(WIN32RES)
+PGFILEDESC = "yaspgpasswordpolicy - postgresql credential checker"
 
 DATA = $(wildcard updates/*--*.sql) $(EXTENSION)--$(EXTVERSION).sql
 
-REGRESS_OPTS  = --inputdir=test --load-extension=credcheck
+REGRESS_OPTS  = --inputdir=test --load-extension=yaspgpasswordpolicy
 TESTS = 01_username 02_password 03_rename 04_alter_pwd \
 	05_reuse_history 06_reuse_interval 07_valid_until
 

@@ -1,9 +1,9 @@
 DROP USER IF EXISTS credtest;
-DROP EXTENSION credcheck CASCADE;
-CREATE EXTENSION credcheck;
+DROP EXTENSION yaspgpasswordpolicy CASCADE;
+CREATE EXTENSION yaspgpasswordpolicy;
 SELECT pg_password_history_reset();
 SELECT * FROM pg_password_history WHERE rolename = 'credtest';
-SET credcheck.password_reuse_history = 2;
+SET yaspgpasswordpolicy.password_reuse_history = 2;
 -- When creating user the password must be stored in the history
 CREATE USER credtest WITH PASSWORD 'H8Hdre=S2';
 ALTER USER credtest PASSWORD 'J8YuRe=6O';

@@ -1,13 +1,13 @@
-## credcheck - PostgreSQL username/password checks
+## yaspgpasswordpolicy - PostgreSQL username/password checks
 
-- [credcheck - PostgreSQL username/password checks](#credcheck---postgresql-usernamepassword-checks)
+- [yaspgpasswordpolicy - PostgreSQL username/password checks](#yaspgpasswordpolicy---postgresql-usernamepassword-checks)
 	- [Description](#description)
 	- [Installation](#installation)
 	- [Checks](#checks)
+	- [Examples](#examples)
 	- [Password reuse policy](#password-reuse-policy)
 	- [Authentication failure ban](#authentication-failure-ban)
 	- [Authentication delay](#authentication-delay)
-	- [Examples](#examples)
 	- [Limitations](#limitations)
 	- [Authors](#authors)
 	- [License](#license)
@@ -16,7 +16,7 @@
 
 ### [Description](#description)
 
-The `credcheck` PostgreSQL extension provides few general credential checks, which will be evaluated during the user creation, during the password change and user renaming. By using this extension, we can define a set of rules:
+The `yaspgpasswordpolicy` PostgreSQL extension provides few general credential checks, which will be evaluated during the user creation, during the password change and user renaming. By using this extension, we can define a set of rules:
 
 - allow a specific set of credentials
 - reject a certain type of credentials
@@ -25,11 +25,11 @@ The `credcheck` PostgreSQL extension provides few general credential checks, whi
 - define a password reuse policy
 - define the number of authentication failure allowed before a user is banned
 
-This extension provides all the checks as configurable parameters. The default configuration settings, will not enforce any complex checks and will try to allow most of the credentials. By using `SET credcheck.<check-name> TO <some value>;` command, enforce new settings for the credential checks. The settings can only be changed by a superuser.
+This extension provides all the checks as configurable parameters. The default configuration settings, will not enforce any complex checks and will try to allow most of the credentials. By using `SET yaspgpasswordpolicy.<check-name> TO <some value>;` command, enforce new settings for the credential checks. The settings can only be changed by a superuser.
 
 ### [Installation](#installation)
 
-To install the credcheck extension you need a PostgreSQL version upper than 10
+To install the yaspgpasswordpolicy extension you need a PostgreSQL version upper than 10
 but if you want to use the Password Reuse Policy feature the minimum version
 required is 12.
 
@@ -56,7 +56,7 @@ or
 
 Once it is done, do "make", and then "sudo make install".
 
-Append `credcheck` to `shared_preload_libraries` configuration parameter in your
+Append `yaspgpasswordpolicy` to `shared_preload_libraries` configuration parameter in your
 `postgresql.conf` file then restart the PostgreSQL database to apply the changes.
 
 The regression tests can be run by using the `make installcheck` command.
@@ -90,25 +90,25 @@ Please find the below list of general checks, which we can enforce on credential
 | password_valid_until      | password | force use of VALID UNTIL clause in CREATE ROLE statement with a minimum number of days   | 60             | &check; CREATE ROLE abcd VALID UNTIL (now()+'3 months'::interval)::date | &#10008; CREATE ROLE abcd LOGIN; |
 | password_valid_max        | password | force use of VALID UNTIL clause in CREATE ROLE statement with a maximum number of days   | 365             | &check; CREATE ROLE abcd VALID UNTIL (now()+'6 months'::interval)::date | &#10008;  CREATE ROLE abcd VALID UNTIL (now()+'2 years'::interval)::date; |
 
-There is also the `credcheck.whitelist` GUC that can be used to set a comma separated list of username to exclude from the password policy check. For example:
+There is also the `yaspgpasswordpolicy.whitelist` GUC that can be used to set a comma separated list of username to exclude from the password policy check. For example:
 ```
-credcheck.whitelist = 'admin,supuser'
+yaspgpasswordpolicy.whitelist = 'admin,supuser'
 ```
-will disable any credcheck policy for the user named `admin` and  `supuser`.
+will disable any yaspgpasswordpolicy policy for the user named `admin` and  `supuser`.
 
 ### [Examples](#examples)
 
 Let us start with a simple check as every username should be of length minimum 4 characters.
 
 ```
-postgres=# SHOW credcheck.username_min_length;
- credcheck.username_min_length 
+postgres=# SHOW yaspgpasswordpolicy.username_min_length;
+ yaspgpasswordpolicy.username_min_length 
 -------------------------------
  4
 (1 row)
 
 postgres=# CREATE USER abc WITH PASSWORD 'pass';
-ERROR:  username length should match the configured credcheck.username_min_length
+ERROR:  username length should match the configured yaspgpasswordpolicy.username_min_length
 
 postgres=# CREATE USER abcd WITH PASSWORD 'pass';
 CREATE ROLE
@@ -117,14 +117,14 @@ CREATE ROLE
 Let us enforce an another check as every username should contain a special character in it.
 
 ```
-postgres=# SHOW credcheck.username_min_special;
- credcheck.username_min_special 
+postgres=# SHOW yaspgpasswordpolicy.username_min_special;
+ yaspgpasswordpolicy.username_min_special 
 --------------------------------
  1
 (1 row)
 
 postgres=# CREATE USER abcd WITH PASSWORD 'pass';
-ERROR:  username does not contain the configured credcheck.username_min_special characters
+ERROR:  username does not contain the configured yaspgpasswordpolicy.username_min_special characters
 
 postgres=# CREATE USER abcd$ WITH PASSWORD 'pass';
 CREATE ROLE
@@ -134,20 +134,20 @@ Let us add one more check to the username, where username should not contain mor
 
 
 ```
-postgres=# show credcheck.username_min_repeat ;
- credcheck.username_min_repeat 
+postgres=# show yaspgpasswordpolicy.username_min_repeat ;
+ yaspgpasswordpolicy.username_min_repeat 
 -------------------------------
  1
 (1 row)
 
 postgres=# CREATE USER week$ WITH PASSWORD 'pass';
-ERROR:  username characters are repeated more than the configured credcheck.username_min_repeat times
+ERROR:  username characters are repeated more than the configured yaspgpasswordpolicy.username_min_repeat times
 
 postgres=# CREATE USER weak$ WITH PASSWORD 'pass';
 CREATE ROLE
 
-postgres=# SHOW credcheck.username_min_repeat ;
- credcheck.username_min_repeat 
+postgres=# SHOW yaspgpasswordpolicy.username_min_repeat ;
+ yaspgpasswordpolicy.username_min_repeat 
 -------------------------------
  2
 (1 row)
@@ -160,14 +160,14 @@ Now, let us add some checks for the password.
 Let us start with a check as a password should not contain these characters (!@=$#).
 
 ```
-postgres=# SHOW credcheck.password_not_contain ;
- credcheck.password_not_contain 
+postgres=# SHOW yaspgpasswordpolicy.password_not_contain ;
+ yaspgpasswordpolicy.password_not_contain 
 --------------------------------
  !@=$#
 (1 row)
 
 postgres=# CREATE USER abcd$ WITH PASSWORD 'p@ss';
-ERROR:  password does contain the configured credcheck.password_not_contain characters
+ERROR:  password does contain the configured yaspgpasswordpolicy.password_not_contain characters
 
 postgres=# CREATE USER abcd$ WITH PASSWORD 'pass';
 CREATE ROLE
@@ -176,8 +176,8 @@ CREATE ROLE
 Let us add another check for the password as, the password should not contain username.
 
 ```
-postgres=# SHOW credcheck.password_contain_username ;
- credcheck.password_contain_username 
+postgres=# SHOW yaspgpasswordpolicy.password_contain_username ;
+ yaspgpasswordpolicy.password_contain_username 
 -------------------------------------
  on
 (1 row)
@@ -196,8 +196,8 @@ CREATE ROLE
 Let us make checks as to ignore the case.
 
 ```
-postgres=# SHOW credcheck.password_ignore_case;
- credcheck.password_ignore_case 
+postgres=# SHOW yaspgpasswordpolicy.password_ignore_case;
+ yaspgpasswordpolicy.password_ignore_case 
 --------------------------------
  on
 (1 row)
@@ -212,25 +212,25 @@ CREATE ROLE
 Let us add one final check to the password as the password should not contain any adjacent repeated characters.
 
 ```
-postgres=# SHOW credcheck.password_min_repeat ;
- credcheck.password_min_repeat 
+postgres=# SHOW yaspgpasswordpolicy.password_min_repeat ;
+ yaspgpasswordpolicy.password_min_repeat 
 -------------------------------
  3
 (1 row)
 
 postgres=# CREATE USER abcd$ WITH PASSWORD 'straaaangepaasssword';
-ERROR:  password characters are repeated more than the configured credcheck.password_min_repeat times
+ERROR:  password characters are repeated more than the configured yaspgpasswordpolicy.password_min_repeat times
 
 postgres=# CREATE USER abcd$ WITH PASSWORD 'straaangepaasssword';
 CREATE ROLE
 ```
 
-credcheck can also enforce the use of an expiration date for the password by checking option VALID UNTIL used in CREATE or ALTER ROLE.
+yaspgpasswordpolicy can also enforce the use of an expiration date for the password by checking option VALID UNTIL used in CREATE or ALTER ROLE.
 ```
-postgres=# SET credcheck.password_valid_until = 30;
+postgres=# SET yaspgpasswordpolicy.password_valid_until = 30;
 SET
 
-postgres=# SET credcheck.password_valid_max = 180;
+postgres=# SET yaspgpasswordpolicy.password_valid_max = 180;
 SET
 
 postgres=# CREATE USER abcd$;
@@ -256,24 +256,24 @@ ERROR:  password is easily cracked
 ### [Password reuse policy](#password-reuse-policy)
 
 PostgreSQL supports natively password expiration, all other kinds of password policy enforcement comes with extensions.
-With the credcheck extension, password can be forced to be of a certain length, contain amounts of various types of characters and be checked against the user account name itself.
+With the yaspgpasswordpolicy extension, password can be forced to be of a certain length, contain amounts of various types of characters and be checked against the user account name itself.
 
 But one thing was missing, there was no password reuse policy enforcement. That mean that when user were required to change their password, they could just reuse their current password!
 
-The credcheck extension adds the "Password Reuse Policy" in release 1.0. To used this feature, the credcheck extension MUST be added to `shared_preload_libraries` configuration option.
+The yaspgpasswordpolicy extension adds the "Password Reuse Policy" in release 1.0. To used this feature, the yaspgpasswordpolicy extension MUST be added to `shared_preload_libraries` configuration option.
 
 All users passwords are historicized in shared memory together with the timestamps of when these passwords were set. The passwords history is saved into a file named `$PGDATA/pg_password_history` to be reloaded in shared memory at startup. This file must be part of your backups if you don't want to loose the password history, hopefully pg_basebackup will take care of it. Passwords are stored and compared as sha256 hashes, never in plain text.
 
-The password history size is set to 65535 records by default and can be adjusted using the `credcheck.history_max_size` configuration directive. Change of this GUC require a PostgreSQL restart. One record in the history takes 144 bytes, so the default is to allocate around 10 MB of additional shared memory for the password history.
+The password history size is set to 65535 records by default and can be adjusted using the `yaspgpasswordpolicy.history_max_size` configuration directive. Change of this GUC require a PostgreSQL restart. One record in the history takes 144 bytes, so the default is to allocate around 10 MB of additional shared memory for the password history.
 
 Two settings allow to control the behavior of this feature:
 
-* `credcheck.password_reuse_history`: number of distinct passwords set before a password can be reused.
-* `credcheck.password_reuse_interval`: amount of time it takes before a password can be reused again.
+* `yaspgpasswordpolicy.password_reuse_history`: number of distinct passwords set before a password can be reused.
+* `yaspgpasswordpolicy.password_reuse_interval`: amount of time it takes before a password can be reused again.
 
 The default value for these settings are 0 which means that all password reuse policies are disabled.
 
-The password history consists of passwords a user has been assigned in the past. credcheck can
+The password history consists of passwords a user has been assigned in the past. yaspgpasswordpolicy can
 restrict new passwords from being chosen from this history:
 
 * If an account is restricted on the basis of number of password changes, a new password cannot be chosen from the `password_reuse_history` most recent passwords. For example, minimum number of password changes is set to 3, a new password cannot be the same as any of the most recent 3 passwords.
@@ -281,13 +281,13 @@ restrict new passwords from being chosen from this history:
 * If an account is restricted based on time elapsed, a new password cannot be chosen from passwords in the history that are newer than `password_reuse_interval` days. For example, if the password reuse interval is set to 365, a new password must not be among those previously chosen within the last year. 
 
 To be able to list the content of the history a view is provided in the database you have created
-the credcheck extension. The view is named `public.pg_password_history`. This view is visible by everyone.
+the yaspgpasswordpolicy extension. The view is named `public.pg_password_history`. This view is visible by everyone.
 
 A superuser can also reset the content of the password history by calling a function named `public.pg_password_history_reset()`. If it is called without an argument, all the passwords history will be cleared. To only remove the records registered for a single user, just pass his name as parameter. This function returns the number of records removed from the history.
 
 Example:
 ```
-SET credcheck.password_reuse_history = 2;
+SET yaspgpasswordpolicy.password_reuse_history = 2;
 CREATE USER credtest WITH PASSWORD 'H8Hdre=S2';
 ALTER USER credtest PASSWORD 'J8YuRe=6O';
 SELECT rolename, password_hash FROM pg_password_history WHERE rolename = 'credtest' ORDER BY password_date;
@@ -311,8 +311,8 @@ SELECT pg_password_history_reset();
 
 Example for password reuse interval:
 ```
-SET credcheck.password_reuse_history = 1;
-SET credcheck.password_reuse_interval = 365;
+SET yaspgpasswordpolicy.password_reuse_history = 1;
+SET yaspgpasswordpolicy.password_reuse_interval = 365;
 -- Add a new password in the history and set its age to 100 days
 ALTER USER credtest PASSWORD 'J8YuRe=6O';
 SELECT pg_password_history_timestamp('credtest', now()::timestamp - '100 days'::interval);
@@ -351,23 +351,23 @@ to change the timestamp of all registered passwords in the history.
 
 ### [Authentication failure ban](#authentication-failure-ban)
 
-PostgreSQL doesn't have any mechanism to limit the number of authentication failure attempt before the user being banned.  With the credcheck extension, after an amount of authentication failure defined by configuration directive `credcheck.max_auth_failure` the user can be banned and never connect anymore even if it gives the right password later.
+PostgreSQL doesn't have any mechanism to limit the number of authentication failure attempt before the user being banned.  With the yaspgpasswordpolicy extension, after an amount of authentication failure defined by configuration directive `yaspgpasswordpolicy.max_auth_failure` the user can be banned and never connect anymore even if it gives the right password later.
 
-The credcheck extension adds the "Authentication failure ban" feature in release 2.0. To used this feature, the credcheck extension MUST be added to `shared_preload_libraries` configuration option.
+The yaspgpasswordpolicy extension adds the "Authentication failure ban" feature in release 2.0. To used this feature, the yaspgpasswordpolicy extension MUST be added to `shared_preload_libraries` configuration option.
 
 All users authentication failures are registered in shared memory with the timestamps of when the user have been banned. The authentication failures history is saved into memory only, that mean that the history is lost at PostgreSQL restart. I have not seen the interest to restore the cache at startup
 
-The authentication failure cache size is set to 1024 records by default and can be adjusted using the `credcheck.auth_failure_cache_size` configuration directive. Change of this GUC require a PostgreSQL restart.
+The authentication failure cache size is set to 1024 records by default and can be adjusted using the `yaspgpasswordpolicy.auth_failure_cache_size` configuration directive. Change of this GUC require a PostgreSQL restart.
 
 Two settings allow to control the behavior of this feature:
 
-* `credcheck.max_auth_failure`: number of authentication failure allowed for a user before being banned.
-* `credcheck.reset_superuser` : force superuser to not be banned or reset a banned superuser when set to true.
+* `yaspgpasswordpolicy.max_auth_failure`: number of authentication failure allowed for a user before being banned.
+* `yaspgpasswordpolicy.reset_superuser` : force superuser to not be banned or reset a banned superuser when set to true.
 
 The default value for the first setting is `0` which means that the authentication failure ban feature is disabled.
 The default value for the second setting is `false` which means that `postgres` superuser can be banned.
 
-In case the `postgres` superuser was banned, he can not logged anymore. If there is no other superuser account that can be used to reset the record of the banned superuser, set the `credcheck.reset_superuser`configuration directive to `true` into postgresql.conf file and send the SIGHUP signal to the PostgreSQL process pid so that it will reread the configuration. Next time the superuser will try to connect, its authentication failure cache entry will be removed.
+In case the `postgres` superuser was banned, he can not logged anymore. If there is no other superuser account that can be used to reset the record of the banned superuser, set the `yaspgpasswordpolicy.reset_superuser`configuration directive to `true` into postgresql.conf file and send the SIGHUP signal to the PostgreSQL process pid so that it will reread the configuration. Next time the superuser will try to connect, its authentication failure cache entry will be removed.
 
 Example: `kill -1 1234`
 
@@ -419,12 +419,12 @@ connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  passw
 
 If you want to exclude some users from being banned, like application users for example, you can set a whitelist of username that must be excluded from this behavior.
 ```
-	credcheck.whitelist_auth_failure = 'appuser1,appuser2'
+	yaspgpasswordpolicy.whitelist_auth_failure = 'appuser1,appuser2'
 ```
 
 ### [Authentication delay](#authentication-delay)
 
-This feature allow a pause on authentication failure. Setting `credcheck.auth_delay_ms` causes the server to pause for a given number of milliseconds before reporting authentication failure. This makes brute-force attacks on database passwords more difficult. 
+This feature allow a pause on authentication failure. Setting `yaspgpasswordpolicy.auth_delay_ms` causes the server to pause for a given number of milliseconds before reporting authentication failure. This makes brute-force attacks on database passwords more difficult. 
 
 ### [Limitations](#limitations)
 
@@ -444,7 +444,7 @@ ERROR:  password type is not a plain text
 ```
 
 To allow the use of encrypted password in CREATE or ALTER ROLE, enable configuration custom
-variable `credcheck.encrypted_password_allowed`.
+variable `yaspgpasswordpolicy.encrypted_password_allowed`.
 
 This also affect the `\password` psql command as it sends encrypted passord to the backend.
  

@@ -1,11 +1,12 @@
--- credcheck extension for PostgreSQL
--- Copyright (c) 2021-2023 MigOps Inc - All rights reserved.
--- Copyright (c) 2023 Gilles Darold   - All rights reserved.
+-- yaspgpasswordpolicy extension for PostgreSQL
+-- Copyright (c) 2021-2023 MigOps Inc
+-- Copyright (c) 2023 Gilles Darold
+-- Copyright (c) 2024 HexaCluster Corp
 
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
-\echo Use "CREATE EXTENSION credcheck" to load this file. \quit
+\echo Use "CREATE EXTENSION yaspgpasswordpolicy" to load this file. \quit
 
-CREATE SCHEMA credcheck;
+CREATE SCHEMA yaspgpasswordpolicy;
 
 ----
 -- Remove all entries from password history.
