@@ -53,6 +53,7 @@ DROP USER IF EXISTS a$;
 --
 SET yaspgpp.username_min_upper TO 1;
 DROP USER IF EXISTS "aA$";
+DROP USER IF EXISTS "aa$";
 CREATE USER "aa$" WITH PASSWORD 'dummy';
 CREATE USER "aA$" WITH PASSWORD 'dummy';
 DROP USER IF EXISTS "aA$";
