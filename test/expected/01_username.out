@@ -64,6 +64,7 @@ SET yaspgpp.username_min_upper TO 1;
 DROP USER IF EXISTS "aA$";
 NOTICE:  role "aA$" does not exist, skipping
 DROP USER IF EXISTS "aa$";
+NOTICE:  role "aa$" does not exist, skipping
 CREATE USER "aa$" WITH PASSWORD 'dummy';
 ERROR:  username does not contain the configured yaspgpp.username_min_upper characters (1)
 CREATE USER "aA$" WITH PASSWORD 'dummy';
