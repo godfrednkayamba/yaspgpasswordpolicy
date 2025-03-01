@@ -1,5 +1,5 @@
 CREATE USER aaa PASSWORD 'DummY';
-LOAD 'yaspgpasswordpolicy';
+LOAD 'yaspgpp';
 --
 --reset all settings
 --

@@ -2,7 +2,7 @@
 SET client_min_messages TO warning;
 CREATE USER aaa PASSWORD 'DummY';
 CREATE USER bbb;
-LOAD 'yaspgpasswordpolicy';
+LOAD 'yaspgpp';
 --
 --reset all settings
 --

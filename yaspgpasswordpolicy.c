@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
  *
- * yaspgpasswordpolicy.c:
+ * yaspgpp.c:
  * 		This file has the general PostgreSQL credential checks.
  *
  * This program is open source, licensed under the PostgreSQL license.

@@ -1,4 +1,4 @@
-LOAD 'yaspgpasswordpolicy';
+LOAD 'yaspgpp';
 --
 --reset all settings
 --

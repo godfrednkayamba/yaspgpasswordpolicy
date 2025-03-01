@@ -6,9 +6,9 @@ and fixes bugs reported by users since last release.
   - Fix ban count with ssl.
   - Fix compilation with PG11.
   - Add new configuration variable to exclude some users from being banned.
-    With yaspgpasswordpolicy.whitelist_auth_failure you can set a whitelist of usernames
+    With yaspgpp.whitelist_auth_failure you can set a whitelist of usernames
     that must be excluded from this behavior. Example of use:
-          yaspgpasswordpolicy.whitelist_auth_failure = 'appuser1,appuser2'
+          yaspgpp.whitelist_auth_failure = 'appuser1,appuser2'
     Thanks to Kennycwc for the feature request.
   - Update regression test expected output.
   - Add a note about the \password command. Thanks to tsoulabail for the report.
@@ -20,7 +20,7 @@ and fixes bugs reported by users since last release.
 2024-08-03 - Version 2.8.0
 
 This release adds the compatibility with PostgreSQL 17. Upgrade require a
-PostgreSQL restart to reload the yaspgpasswordpolicy library.
+PostgreSQL restart to reload the yaspgpp library.
 
 - Remove call to tuplestore_donestoring() for compatibility with PG v17.
 - Show actual setted parameters in error messages. Thanks to coroneltortuga
@@ -55,7 +55,7 @@ This release is a maintenance release to fix a major issue with the backup of th
 history file with pgBackRest and adds an authentication delay feature.
 
   - Add authentication delay feature to be able to add a pause on authentication
-    failure. Setting `yaspgpasswordpolicy.auth_delay_ms` causes the server to pause for a
+    failure. Setting `yaspgpp.auth_delay_ms` causes the server to pause for a
     given number of milliseconds before reporting authentication failure. This
     makes brute-force attacks on database passwords more difficult.
     This patch is purely a copy/paste from the auth_delay extension to avoid
@@ -71,21 +71,21 @@ history file with pgBackRest and adds an authentication delay feature.
 This release is a maintenance release to fix a major issue with the
 "whitelist" feature.
 
-  - Fix crash when length of the yaspgpasswordpolicy.whitelist value was > NAMEDATALEN.
+  - Fix crash when length of the yaspgpp.whitelist value was > NAMEDATALEN.
     Thanks to zobnin for the report.
 
-Extension upgrade requires a PostgreSQL restart to reload the yaspgpasswordpolicy library.
+Extension upgrade requires a PostgreSQL restart to reload the yaspgpp library.
 
 2023-09-16 - Version 2.2.0
 
 This release adds a new feature, fixes a major bug with null password and fixes
 some issues reported by users since last release.
 
-  - Add new GUC variable yaspgpasswordpolicy.whitelist that can be used to set a comma
+  - Add new GUC variable yaspgpp.whitelist that can be used to set a comma
     separated list of username to exclude from the password policy check.
     For example:
-        yaspgpasswordpolicy.whitelist = 'admin,supuser'
-    will disable any yaspgpasswordpolicy policy for the user named admin and supuser.
+        yaspgpp.whitelist = 'admin,supuser'
+    will disable any yaspgpp policy for the user named admin and supuser.
     Thanks to Nikolai for the feature request.
   - Add -Wno-ignored-attributes to CPPFLAGS to avoid compilation warning on
     pg_vsnprintf call.
@@ -97,16 +97,16 @@ some issues reported by users since last release.
     selecting the tests to run on PG13 in the Makefile, simply let pg_regress
     choose the matching output file from .out and _1.out. Thanks to Christoph
     Berg for the patch.
-  - Add missing file yaspgpasswordpolicy--2.1.0.sql. Thanks to Jeff Janes for the report.
+  - Add missing file yaspgpp--2.1.0.sql. Thanks to Jeff Janes for the report.
 
-Extension upgrade requires a PostgreSQL restart to reload the yaspgpasswordpolicy library.
+Extension upgrade requires a PostgreSQL restart to reload the yaspgpp library.
 
 2023-07-15 - Version 2.1.0
 
 This release adds a two new features and fix issues reported by users
 since last release.
 
-  - Add custom configuration variable yaspgpasswordpolicy.encrypted_password
+  - Add custom configuration variable yaspgpp.encrypted_password
     allowed to allow the use of encrypted password in CREATE or
     ALTER ROLE statement. Default is to not allow encrypted password
     and to fire an error. Thanks to ragaoua for the feature request.
@@ -117,22 +117,22 @@ since last release.
   - Fix failure count issue when ssl is disabled. Thanks to yinzhishu for
     the report.
 
-Upgrade require a PostgreSQL restart to reload the yaspgpasswordpolicy library.
+Upgrade require a PostgreSQL restart to reload the yaspgpp library.
 
 2023-06-10 - Version 2.0.0
 
 This release adds a major feature called Authentication Failure Ban and
 the compatibility with PostgreSQL 16. Upgrade require a PostgreSQL restart
-to reload the yaspgpasswordpolicy library.
+to reload the yaspgpp library.
 
   - Add "Authentication failure ban" new feature
     
 	PostgreSQL doesn't have any mechanism to limit the number of authentication
-	failure attempt before the user being banned.  With the yaspgpasswordpolicy extension,
+	failure attempt before the user being banned.  With the yaspgpp extension,
 	after an amount of authentication failure defined by configuration directive
-	`yaspgpasswordpolicy.max_auth_failure` the user can be banned and never connect anymore
+	`yaspgpp.max_auth_failure` the user can be banned and never connect anymore
 	even if it gives the right password later. This feature requires that the
-	yaspgpasswordpolicy extension to be added to to `shared_preload_libraries` configuration
+	yaspgpp extension to be added to to `shared_preload_libraries` configuration
 	option.
 
 	All users authentication failures are registered in shared memory with the
@@ -142,14 +142,14 @@ to reload the yaspgpasswordpolicy library.
 	the cache at startup.
 
 	The authentication failure cache size is set to 1024 records by default and
-	can be adjusted using the `yaspgpasswordpolicy.auth_failure_cache_size` configuration
+	can be adjusted using the `yaspgpp.auth_failure_cache_size` configuration
 	directive. Change of this GUC require a PostgreSQL restart.
 
 	Two settings allow to control the behavior of this feature:
 
-	* `yaspgpasswordpolicy.max_auth_failure`: number of authentication failure allowed
+	* `yaspgpp.max_auth_failure`: number of authentication failure allowed
 	for a user before being banned.
-	* `yaspgpasswordpolicy.reset_superuser` : force superuser to not be banned or reset
+	* `yaspgpp.reset_superuser` : force superuser to not be banned or reset
 	a banned superuser when set to true.
 
 	The default value for the first setting is `0` which means that authentication
@@ -158,7 +158,7 @@ to reload the yaspgpasswordpolicy library.
 
 	In case the `postgres` superuser was banned, he can not logged anymore. If
 	there is no other superuser account that can be used to reset the record of
-	the banned superuser, set the `yaspgpasswordpolicy.reset_superuser`configuration directive
+	the banned superuser, set the `yaspgpp.reset_superuser`configuration directive
 	to `true` into postgresql.conf file and send the SIGHUP signal to the PostgreSQL
 	process pid so that it will reread the configuration. Next time the superuser will
 	try to connect, its authentication failure cache entry will be removed.
@@ -174,14 +174,14 @@ This release fixes a major bug reported by users since last release:
     VALID UNTIL min/max error. Add a regression test for this case.
     Thanks to Tushar Takate for the report.
 
-Upgrade require a PostgreSQL restart to reload the yaspgpasswordpolicy library.
+Upgrade require a PostgreSQL restart to reload the yaspgpp library.
 
 2023-04-27 - Version 1.1.0
 
 This release fixes some minor issues reported by users since last release
 and adds a new custom setting:
 
- - yaspgpasswordpolicy.password_valid_max to force use of VALID UNTIL clause in
+ - yaspgpp.password_valid_max to force use of VALID UNTIL clause in
    CREATE/ALTER ROLE statements with a maximum number of days. Thanks to
    Gabriel Leroux for the feature report.
  - Explicitely import unistd.h for unlink() calls. Thanks to Gabriel Leroux
@@ -197,36 +197,36 @@ of error and fixes some issues reported by users since the past 6 months.
   - Add Password Reuse Policy feature. This implementation use a dedicated
     shared memory storage to share the password history between all database.
     
-    The module must be loaded by adding yaspgpasswordpolicy to shared_preload_libraries
+    The module must be loaded by adding yaspgpp to shared_preload_libraries
     in postgresql.conf, because it requires additional shared memory.
     This means that a server restart is needed to add or remove the module.
     
-    When yaspgpasswordpolicy is active, it stores password history across all databases
+    When yaspgpp is active, it stores password history across all databases
     of the server. To access and manipulate this history, the module provides a
     view pg_password_history and the utility functions pg_password_history_reset()
     and pg_password_history_timestamp(). These are not available globally but can
-    be enabled for a specific database with CREATE EXTENSION yaspgpasswordpolicy.
+    be enabled for a specific database with CREATE EXTENSION yaspgpp.
     
     The password history is stored in share memory and written to disk in
     file $PGDATA/global/pg_password_history to be loaded at startup. The
     share memory history size is set to 65535 records by default and can
-    be adjusted using the yaspgpasswordpolicy.history_max_size configuration
+    be adjusted using the yaspgpp.history_max_size configuration
     directive. Change of this GUC require a PostgreSQL restart. One record
     in the history takes 144 bytes so the default is to allocate around
     10 MB of additional shared memory for the password history.
    
     Two settings allow to control the behavior of this feature:
     
-      - yaspgpasswordpolicy.password_reuse_history: number of distinct passwords set
+      - yaspgpp.password_reuse_history: number of distinct passwords set
         before a password can be reused.
-      - yaspgpasswordpolicy.password_reuse_interval: amount of time it takes before a
+      - yaspgpp.password_reuse_interval: amount of time it takes before a
         password can be reused again.
     
     The default value for these settings are 0 which means that all password
     reuse policies are disabled.
     
     The password history consists of passwords a user has been assigned in
-    the past. yaspgpasswordpolicy can restrict new passwords from being chosen from
+    the past. yaspgpp can restrict new passwords from being chosen from
     this history:
     
       - If an account is restricted on the basis of number of password changes,
@@ -244,19 +244,19 @@ of error and fixes some issues reported by users since the past 6 months.
 
   - Force PostgreSQL to not expose the password in the log when an error
     in CREATE/ALTER role occurs. This behavior can be disabled by setting
-    the custom variable yaspgpasswordpolicy.no_password_logging to off.
+    the custom variable yaspgpp.no_password_logging to off.
 
   - Add possibility to enforce the use of an expiration date for a password
     with a life time of a specific number of days. Ex:
-      yaspgpasswordpolicy.password_valid_until = 60
+      yaspgpp.password_valid_until = 60
     the password life time must be at least of two months.
     Thanks to Umair Shahid for the feature request.
 
-  - Allow yaspgpasswordpolicy to check the user name in CREATE USER statement without
+  - Allow yaspgpp to check the user name in CREATE USER statement without
     option PASSWORD. Thanks to freeDev84 for the feature report.
 
-  - Force yaspgpasswordpolicy settings to be set/changed only by a superuser.
-    This fix will break backward compatibility if you use SET yaspgpasswordpolicy.* on
+  - Force yaspgpp settings to be set/changed only by a superuser.
+    This fix will break backward compatibility if you use SET yaspgpp.* on
     a non superuser connection.
 
   - Fix detection of the VALID UNTIL clause in CREATE ROLE. Thanks to did16 for
@@ -286,5 +286,5 @@ size is 1 and also change the comment style in C code.
 
 2021-06-24 - Version 0.1.0
 
-This is the first release of yaspgpasswordpolicy extension, which is a credential
+This is the first release of yaspgpp extension, which is a credential
 checker for the PostgreSQL users.
