@@ -1,7 +1,7 @@
 DROP USER IF EXISTS credtest;
 NOTICE:  role "credtest" does not exist, skipping
-DROP EXTENSION yaspgpasswordpolicy CASCADE;
-CREATE EXTENSION yaspgpasswordpolicy;
+DROP EXTENSION yaspgpp CASCADE;
+CREATE EXTENSION yaspgpp;
 SELECT pg_password_history_reset();
  pg_password_history_reset 
 ---------------------------
@@ -13,7 +13,7 @@ SELECT * FROM pg_password_history WHERE rolename = 'credtest';
 ----------+---------------+---------------
 (0 rows)
 
-SET yaspgpasswordpolicy.password_reuse_history = 2;
+SET yaspgpp.password_reuse_history = 2;
 -- When creating user the password must be stored in the history
 CREATE USER credtest WITH PASSWORD 'H8Hdre=S2';
 ALTER USER credtest PASSWORD 'J8YuRe=6O';

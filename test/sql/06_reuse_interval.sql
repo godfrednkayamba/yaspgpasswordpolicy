@@ -1,15 +1,15 @@
 SET client_min_messages TO warning;
 
 DROP USER IF EXISTS credtest;
-DROP EXTENSION yaspgpasswordpolicy CASCADE;
-CREATE EXTENSION yaspgpasswordpolicy;
+DROP EXTENSION yaspgpp CASCADE;
+CREATE EXTENSION yaspgpp;
 SELECT pg_password_history_reset();
 SELECT * FROM pg_password_history WHERE rolename = 'credtest';
 -- no password in the history, settings password_reuse_history
 -- or password_reuse_interval are not set yet
 CREATE USER credtest WITH PASSWORD 'AJ8YuRe=6O0';
-SET yaspgpasswordpolicy.password_reuse_history = 1;
-SET yaspgpasswordpolicy.password_reuse_interval = 365;
+SET yaspgpp.password_reuse_history = 1;
+SET yaspgpp.password_reuse_interval = 365;
 SELECT rolename, password_hash FROM pg_password_history WHERE rolename = 'credtest' ORDER BY password_date ;
 -- Add a new password in the history and set its age to 100 days
 ALTER USER credtest PASSWORD 'J8YuRe=6O';
